@@ -39,8 +39,6 @@ if __name__ == "__main__":
     pathlib.Path(f'{dir_results_base}/{args.fitness}/{budget_str}/gbest_PSO').mkdir(parents=True, exist_ok=True)
     pathlib.Path(f'{dir_results_base}/{args.fitness}/{budget_str}/gbest_FSTPSO').mkdir(parents=True, exist_ok=True)
     pathlib.Path(f'{dir_results_base}/{args.fitness}/{budget_str}/gbest_RINGPSO').mkdir(parents=True, exist_ok=True)
-    pathlib.Path(f'{dir_results_base}/{args.fitness}/{budget_str}/DeltaVelocity').mkdir(parents=True, exist_ok=True)
-    pathlib.Path(f'{dir_results_base}/{args.fitness}/{budget_str}/Factors').mkdir(parents=True, exist_ok=True)
     pathlib.Path(f'{dir_results_base}/{args.fitness}/{budget_str}/Velocities').mkdir(parents=True, exist_ok=True)
     pathlib.Path(f'{dir_results_base}/{args.fitness}/{budget_str}/Counters').mkdir(parents=True, exist_ok=True)
     pathlib.Path(f'{dir_results_base}/{args.fitness}/{budget_str}/Basins').mkdir(parents=True, exist_ok=True)

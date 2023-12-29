@@ -56,27 +56,9 @@ def plotParticlesCounters(data, f_name="", save=False):
         iteration = data[i_iteration]
         for i_p in range(len(iteration)):
             toscatter.append((i_p, i_iteration, iteration[i_p]))
-    x, y, z = zip(*toscatter)
-    arr2d = np.array(data)
-    # exit()
-    # plt.figure(figsize=(10, 6))
     fig, ax = plt.subplots()
     fig.set_figheight(10)
     fig.set_figwidth(14)
-    # ax.imshow(data, cmap="colorblind", origin="lower", vmin=0)
-    # ax.grid(which="minor")
-
-    plt.ylabel("Iteration")
-    plt.xlabel("Particle")
-
-
-    """plt.gca().invert_yaxis()
-    plt.xticks(list(range(len(data[0]))), [str(l) for l in range(1, len(data[0]) + 1)])
-    colorbar = hm.collections[0].colorbar
-    # The list comprehension calculates the positions to place the labels to be evenly distributed across the colorbar
-    r = colorbar.vmax - colorbar.vmin
-    colorbar.set_ticks([colorbar.vmin + 0.5 * r / 5 + r * i / 5 for i in range(5)])
-    colorbar.set_ticklabels(["SE", "SR", "DE", "FE", "EX"])"""
 
     # 0 -> Successful Exploration   -> red
     # 1 -> Deceptive Exploration    -> yellow
@@ -94,11 +76,13 @@ def plotParticlesCounters(data, f_name="", save=False):
     r = colorbar.vmax - colorbar.vmin
     colorbar.set_ticks([colorbar.vmin + 0.5 * r / 5 + r * i / 5 for i in range(5)])
     colorbar.set_ticklabels([
-                     "Successful Exploration",
-                     "Deceptive Exploration",
-                     "Failed Exploration",
-                     "Successful Rejection",
-                     "Exploitation"])
+        "Successful Exploration",
+        "Deceptive Exploration",
+        "Failed Exploration",
+        "Successful Rejection",
+        "Exploitation"])
+    plt.ylabel("Iteration")
+    plt.xlabel("Particle")
     plt.tight_layout()
     if save:
         plt.savefig(f"{f_name}.png")
@@ -108,7 +92,7 @@ def plotParticlesCounters(data, f_name="", save=False):
     plt.close()
 
 
-def basins_to_count(basins):
+def basins_to_count_cum(basins):
     n_iters = len(basins)
     flat_list = set([])
     count_basins = []
@@ -118,7 +102,15 @@ def basins_to_count(basins):
     return count_basins
 
 
-def plotBasins2(basins, labels=None, title="", f_name=""):
+def basins_to_count(basins):
+    n_iters = len(basins)
+    count_basins = []
+    for iteration in range(n_iters - 1):
+        count_basins.append(len(basins[iteration]))
+    return count_basins
+
+
+def plotBasins(basins, labels=None, title="", f_name=""):
     iters = range(1, len(basins[0]) + 1)
 
     plt.clf()
@@ -135,51 +127,6 @@ def plotBasins2(basins, labels=None, title="", f_name=""):
     plt.savefig(f"{f_name}.png")
     plt.savefig(f"{f_name}.pdf")
     print(f"{f_name} :  created")
-    plt.clf()
-
-
-def plotBasins(basins_iters_PSO, basins_iters_FSTPSO, basins_iters_RINGPSO, title="", f_name="", save=True):
-    n_basins_0_PSO = len(np.unique(basins_iters_PSO[0]))
-    n_iters = int(len(basins_iters_PSO))  #
-    n_new_basins_iter_PSO = [n_basins_0_PSO]
-    flat_list = set([])
-    for iteration in range(n_iters - 1):
-        flat_list = flat_list.union(set([basin for sublist in basins_iters_PSO[iteration] for basin in sublist]))
-        n_new_basins_iter_PSO.append(len(flat_list))
-
-    n_basins_0_FSTPSO = len(np.unique(basins_iters_FSTPSO[0]))
-    n_new_basins_iter_FSTPSO = [n_basins_0_FSTPSO]
-    flat_list = set([])
-    print("RINGPSO SETS")
-    for iteration in range(n_iters - 1):
-        flat_list = flat_list.union(set([basin for sublist in basins_iters_FSTPSO[iteration] for basin in sublist]))
-        n_new_basins_iter_FSTPSO.append(len(flat_list))
-
-    n_basins_0_RINGPSO = len(np.unique(basins_iters_RINGPSO[0]))
-    n_new_basins_iter_RINGPSO = [n_basins_0_RINGPSO]
-    flat_list = set([])
-    for iteration in range(n_iters - 1):
-        flat_list = flat_list.union(set([basin for sublist in basins_iters_RINGPSO[iteration] for basin in sublist]))
-        n_new_basins_iter_RINGPSO.append(len(flat_list))
-
-    iters = range(1, n_iters + 1)
-    plt.clf()
-    plt.rcParams["figure.figsize"] = (10, 6)
-    plt.tick_params(axis='y', colors='black')
-    plt.title(title)
-    plt.plot(iters, n_new_basins_iter_PSO, label="PSO")
-    plt.plot(iters, n_new_basins_iter_FSTPSO, label="FSTPSO")
-    plt.plot(iters, n_new_basins_iter_RINGPSO, label="RINGPSO")
-    plt.xlabel("Iteration", fontsize=18)
-    plt.ylabel("N", fontsize=18, c='black')
-    plt.tick_params(axis='both', labelsize=14)
-    plt.legend()
-    plt.tight_layout()
-    if save:
-        plt.savefig(f"{f_name}.png")
-        plt.savefig(f"{f_name}.pdf")
-        print(f"{f_name} :  created")
-    plt.show()
     plt.clf()
 
 
@@ -309,6 +256,9 @@ def main(D=30, fitness="Rastrigin", budget_str="4B", budget=30 * 1e4, dir_result
                           f_name=f"{dir_results_base}/plots/{fitness}/{budget_str}/{fitness}_{D}D_{R}R_PC_RINGPSO",
                           save=True)
 
+    basins_PSO_cum = []
+    basins_FSTPSO_cum = []
+    basins_RINGPSO_cum = []
     basins_PSO = []
     basins_FSTPSO = []
     basins_RINGPSO = []
@@ -317,25 +267,43 @@ def main(D=30, fitness="Rastrigin", budget_str="4B", budget=30 * 1e4, dir_result
         with open(
                 f"./{dir_results_base}/{fitness}/{budget_str}/Basins/{fitness}_{D}D_{R}R_basins_iters_PSO.pickle",
                 "rb") as f:
-            basins_PSO.append(basins_to_count(pickle.load(f)))
+            basins_pickle = pickle.load(f)
+            basins_PSO_cum.append(basins_to_count_cum(basins_pickle))
+            basins_PSO.append(basins_to_count(basins_pickle))
         with open(
                 f"./{dir_results_base}/{fitness}/{budget_str}/Basins/{fitness}_{D}D_{R}R_basins_iters_FSTPSO.pickle",
                 "rb") as f:
-            basins_FSTPSO.append(basins_to_count(pickle.load(f)))
+            basins_pickle = pickle.load(f)
+            basins_FSTPSO_cum.append(basins_to_count_cum(basins_pickle))
+            basins_FSTPSO.append(basins_to_count(basins_pickle))
         with open(
                 f"./{dir_results_base}/{fitness}/{budget_str}/Basins/{fitness}_{D}D_{R}R_basins_iters_RINGPSO.pickle",
                 "rb") as f:
-            basins_RINGPSO.append(basins_to_count(pickle.load(f)))
+            basins_pickle = pickle.load(f)
+            basins_RINGPSO_cum.append(basins_to_count_cum(basins_pickle))
+            basins_RINGPSO.append(basins_to_count(basins_pickle))
 
+    obj_basins_PSO_cum = {}
     obj_basins_PSO = {}
-    for R in runs:
-        obj_basins_PSO[R] = basins_PSO[R]
+    obj_basins_FSTPSO_cum = {}
     obj_basins_FSTPSO = {}
-    for R in runs:
-        obj_basins_FSTPSO[R] = basins_FSTPSO[R]
+    obj_basins_RINGPSO_cum = {}
     obj_basins_RINGPSO = {}
     for R in runs:
+        obj_basins_PSO_cum[R] = basins_PSO_cum[R]
+        obj_basins_FSTPSO_cum[R] = basins_FSTPSO_cum[R]
+        obj_basins_RINGPSO_cum[R] = basins_RINGPSO_cum[R]
+        obj_basins_PSO[R] = basins_PSO[R]
+        obj_basins_FSTPSO[R] = basins_FSTPSO[R]
         obj_basins_RINGPSO[R] = basins_RINGPSO[R]
+
+    df_basins_PSO_cum = pd.DataFrame(obj_basins_PSO_cum)
+    df_basins_FSTPSO_cum = pd.DataFrame(obj_basins_FSTPSO_cum)
+    df_basins_RINGPSO_cum = pd.DataFrame(obj_basins_RINGPSO_cum)
+
+    basins_PSO_cum_median = df_basins_PSO_cum.median(axis=1).values.tolist()
+    basins_FSTPSO_cum_median = df_basins_FSTPSO_cum.median(axis=1).values.tolist()
+    basins_RINGPSO_cum_median = df_basins_RINGPSO_cum.median(axis=1).values.tolist()
 
     df_basins_PSO = pd.DataFrame(obj_basins_PSO)
     df_basins_FSTPSO = pd.DataFrame(obj_basins_FSTPSO)
@@ -344,13 +312,21 @@ def main(D=30, fitness="Rastrigin", budget_str="4B", budget=30 * 1e4, dir_result
     basins_PSO_median = df_basins_PSO.median(axis=1).values.tolist()
     basins_FSTPSO_median = df_basins_FSTPSO.median(axis=1).values.tolist()
     basins_RINGPSO_median = df_basins_RINGPSO.median(axis=1).values.tolist()
+
     print("lens")
-    print(len(basins_PSO_median), len(basins_RINGPSO_median), len(basins_FSTPSO_median))
-    plotBasins2(
-        [basins_PSO_median, basins_RINGPSO_median, basins_FSTPSO_median],
+    print(len(basins_PSO_cum_median), len(basins_RINGPSO_cum_median), len(basins_FSTPSO_cum_median))
+    plotBasins(
+        [basins_PSO_cum_median, basins_RINGPSO_cum_median, basins_FSTPSO_cum_median],
         ["PSO", "RINGPSO", "FSTPSO"],
         "Cumulative N of explored basins",
         f"{dir_results_base}/plots/{fitness}/{budget_str}/{fitness}_{D}D_new_basins"
+    )
+
+    plotBasins(
+        [basins_PSO_median, basins_RINGPSO_median, basins_FSTPSO_median],
+        ["PSO", "RINGPSO", "FSTPSO"],
+        "N of explored basins per iter",
+        f"{dir_results_base}/plots/{fitness}/{budget_str}/{fitness}_{D}D_basins_iter"
     )
 
 

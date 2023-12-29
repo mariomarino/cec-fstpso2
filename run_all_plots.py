@@ -1,6 +1,6 @@
 import subprocess as sb
 import sys
-sys.path.insert(0, "/home/mario/projects/cec-fstpso/code")
+sys.path.insert(0, "code")
 
 for fitness in ["Rastrigin"]:
     for D in [2, 30]:
