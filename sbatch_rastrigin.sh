@@ -6,7 +6,7 @@
 
 cd ~
 cd "projects"
-cd "cec-fstpso"
+cd "cec-fstpso2"
 
 eval "$(conda shell.bash hook)"
 conda activate cec-fstpso

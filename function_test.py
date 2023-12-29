@@ -6,8 +6,7 @@ import argparse
 import math
 import pickle
 
-# sys.path.insert(0,"/home/mario/projects/cec-fstpso")
-sys.path.insert(0, "/home/mario/projects/cec-fstpso/code")
+sys.path.insert(0, "code")
 
 from benchmarks.soo.limits import limits
 from benchmarks.soo.functions import functions
@@ -16,7 +15,7 @@ import numpy as np
 from fstpso_original import FuzzyPSO
 
 from fstpso_custom import StallFuzzyPSO
-from fstpso_stu import StuFuzzyPSO
+# from fstpso_stu import StuFuzzyPSO
 from pso import PSO_new
 from pso_ring import PSO_ring
 
