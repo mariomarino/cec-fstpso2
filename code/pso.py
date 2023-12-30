@@ -56,9 +56,9 @@ class PSO_new(object):
         self.WIndex = 0
 
         self.Solutions = []
-        self.InertiaStart = 0.72984  # 0.9
-        self.InertiaEnd = 0.72984  # 0.4
-        self.Inertia = 0.72984  # 0.9
+        self.InertiaStart = 0.9  # 0.72984
+        self.InertiaEnd = 0.4
+        self.Inertia = 0.9
         self.CognitiveFactor = 2.05  # 1.9
         self.SocialFactor = 2.05  # 1.9
         self.MaxVelocity = 1.0
@@ -269,7 +269,8 @@ class PSO_new(object):
         return ret
 
     def NewCreateParticles(self, n, dim, creation_method={'name': "uniform"}, initial_guess_list=None):
-
+        print("pso initial guess list")
+        print(initial_guess_list)
         del self.Solutions[:]
 
         for i in range(n):
@@ -475,8 +476,8 @@ class PSO_new(object):
             for n in range(len(p.X)):
 
                 fattore1 = self.Inertia * p.V[n]
-                fattore2 = random.random() * self.Inertia * self.CognitiveFactor * (p.B[n] - p.X[n])
-                fattore3 = random.random() * self.Inertia * self.SocialFactor * (self.G.X[n] - p.X[n])
+                fattore2 = random.random() * self.CognitiveFactor * (p.B[n] - p.X[n])
+                fattore3 = random.random() * self.SocialFactor * (self.G.X[n] - p.X[n])
 
                 newvelocity = fattore1 + fattore2 + fattore3
 

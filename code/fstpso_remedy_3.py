@@ -1,3 +1,5 @@
+# stalling particles' pbest +- 0.5% size search sp.
+
 import copy
 import logging
 import math
@@ -10,6 +12,9 @@ from fstpso.fstpso_checkpoints import Checkpoint
 from numpy import linalg, mean, zeros
 
 
+# import fstpso
+
+
 class StallParticle(fstpso.Particle):
     def __init__(self):
         fstpso.Particle.__init__(self)
@@ -19,15 +24,14 @@ class StallParticle(fstpso.Particle):
         self.PreviousPbest = []
 
 
-class StallFuzzyPSO(fstpso.FuzzyPSO):
-
-    def __init__(self, SigmaPerc=.005):
+class FuzzyPSO_remedy_3(fstpso.FuzzyPSO):
+    def __init__(self):
         fstpso.FuzzyPSO.__init__(self)
         self.CurrentCumAvg = 0
         self.AvgCounter = 0
         self.DetectStallInterval = 1
-        self.SigmaPerc = SigmaPerc
-        self.KappaMax = None
+        self.SigmaPerc = 0.005
+        self.KappaMax = 0
         self.DeltaVelocity = []
         self.SocialOverTime = []
         self.CognitiveOverTime = []
@@ -61,8 +65,6 @@ class StallFuzzyPSO(fstpso.FuzzyPSO):
             p.PreviousX = list(zeros(dim))
 
         if initial_guess_list is not None:
-            print("fstpso initial guess list")
-            print(initial_guess_list)
             if len(initial_guess_list) > n:
                 print(
                     "ERROR: the number of provided initial guesses (%d) is greater than the swarm size (%d), aborting." % (
@@ -181,16 +183,15 @@ class StallFuzzyPSO(fstpso.FuzzyPSO):
         D = len(B)
         for i in range(self.numberofparticles):
             s = self.Solutions[i]
-            if True:
-                # if s is the global bast, or it has just been updated, reset counters --> no perturbation
-                if i == self.GIndex or s.SinceLastLocalUpdate < 2:
-                    s.Kappa = 0
-                    s.Tau = 0
-                    continue
-                # perturb and reset counters
-                perturbation = [np.random.normal(0, self.SigmaPerc * (B[j][1] - B[j][0]), 1)[0] for j in range(D)]
-                s.B = [s.B[j] + perturbation[j] for j in range(D)]
-                perturbedParticles[i] = True
+            # if s has just been updated, reset counters --> no perturbation  # is the global best, or it
+            if s.SinceLastLocalUpdate < 2:  # i == self.GIndex or
+                s.Kappa = 0
+                s.Tau = 0
+                continue
+            # perturb and reset counters
+            perturbation = [np.random.normal(0, self.SigmaPerc * (B[j][1] - B[j][0]), 1)[0] for j in range(D)]
+            s.B = [s.B[j] + perturbation[j] for j in range(D)]
+            perturbedParticles[i] = True
         return perturbedParticles
 
     def UpdateVelocities(self, ParticlesToUpdate=None):
@@ -319,6 +320,30 @@ class StallFuzzyPSO(fstpso.FuzzyPSO):
             logging.info('[Iteration %d] best individual fitness: %f' % (self.Iterations, self.G.CalculatedFitness))
             logging.info('[Iteration %d] best individual structure: %s' % (self.Iterations, str(self.G.X)))
 
+    def TerminationCriterion(self, verbose=False):
+
+        if verbose:
+            print("Iteration:", self.Iterations)
+            print(", since last global update:", self.SinceLastGlobalUpdate)
+
+        if self.StopOnGoodFitness == True:
+            if self.G.CalculatedFitness < self.GoodFitness:
+                if verbose:
+                    print("Good fitness reached!", self.G.CalculatedFitness)
+                return True
+
+        if self.SinceLastGlobalUpdate > self.MaxNoUpdateIterations:
+            if verbose:
+                print("Too many iterations without new global best")
+            return True
+
+        if self.Iterations >= self.MaxIterations:
+            if verbose:
+                print("Maximum iterations reached")
+            return True
+        else:
+            return False
+
     def solve_with_fstpso(self,
                           max_iter=None, max_iter_without_new_global_best=None, max_FEs=None,
                           creation_method={'name': "uniform"},
@@ -352,9 +377,7 @@ class StallFuzzyPSO(fstpso.FuzzyPSO):
                 This method returns a couple (optimal solution, fitness of the optimal solution)
                 :param KappaMax:
         """
-        self.NewCreateParticles(self.numberofparticles, self.dimensions, creation_method=creation_method,
-                                initial_guess_list=initial_guess_list)
-
+        self.NewCreateParticles(self.NumberOfParticles, self.Dimensions, initial_guess_list=initial_guess_list)
         # first step: check potential errors in FST-PSO's initialization
         self._check_errors()
         self._prepare_for_optimization(max_iter, max_iter_without_new_global_best, max_FEs, KappaMax, verbose)
@@ -376,7 +399,7 @@ class StallFuzzyPSO(fstpso.FuzzyPSO):
             self.Iterations = 0
         else:
             self._load_checkpoint(restart_from_checkpoint, verbose)
-
+        self.MaxIterations = int((max_FEs - self.numberofparticles) / self.numberofparticles)
         return self._actually_launch_optimization(verbose=verbose, callback=callback,
                                                   dump_best_solution=dump_best_solution,
                                                   dump_best_fitness=dump_best_fitness)

@@ -1,11 +1,14 @@
+# stalling particles' pbest +- 0.5% size search sp.
+
 import math
 import logging
 import random
+import numpy as np
 from numpy.random import lognormal
-from numpy import array, zeros, linalg
+from numpy import array, zeros, linalg, mean
 import sys
 import copy
-# import numpy
+
 import subprocess
 
 
@@ -33,6 +36,9 @@ class Particle(object):
         self.MinSpeedMultiplier = 0
 
         self.PreviousPbest = []
+        self.IsStalling = False
+        self.Tau = 0
+        self.Kappa = 0
 
     def __repr__(self):
         return "<Particle %s>" % str(self.X)
@@ -41,7 +47,7 @@ class Particle(object):
         return "\t".join(map(str, self.X))
 
 
-class PSO_ring(object):
+class PSO_ring_remedy_3(object):
 
     def __repr__(self):
         return str("<PSO instance " + self.ID + ">")
@@ -89,6 +95,12 @@ class PSO_ring(object):
 
         self.initial_guess_list = initial_guess_list
 
+        self.CurrentCumAvg = 0
+        self.AvgCounter = 0
+        self.DetectStallInterval = 1
+        self.SigmaPerc = 0.005
+        self.KappaMax = 0
+
     def getBestIndex(self):
         index = 0
         best_fitness = self.Solutions[0].CalculatedFitness
@@ -110,9 +122,82 @@ class PSO_ring(object):
     def UpdateInertia(self):
         self.Inertia = self.InertiaStart - (self.InertiaStart - self.InertiaEnd) / self.MaxIterations * self.Iterations
 
+
+    def updateMean(self, CurrentCumAvg, newValue, currentSize):
+        newSize = currentSize + 1
+        updated = (currentSize * CurrentCumAvg + newValue) / newSize
+
+        return updated, newSize
+
+    def DetectStall(self):
+        currentCumAvgVelocity = self.CurrentCumAvg
+        numStallingParticles = 0
+        for s in self.Solutions:
+            # check velocity vs mean, last update in local best, ecc
+            # update s.IsStalling
+            particleVelocity = linalg.norm(s.V)
+            if s.IsStalling:
+                numStallingParticles += 1
+            if particleVelocity <= currentCumAvgVelocity:
+                s.Kappa += 1
+                if s.Kappa <= self.KappaMax:
+                    continue
+                else:
+                    s.IsStalling = True
+                    s.Tau += 1
+            else:
+                s.IsStalling = False
+                s.Kappa = 0
+                s.Tau = 0
+
+        return numStallingParticles
+
+    def PerturbPBests(self):
+        perturbedParticles = [False] * self.NumberOfParticles
+        B = self.Boundaries
+        D = len(B)
+        for i in range(self.NumberOfParticles):
+            s = self.Solutions[i]
+            if s.IsStalling:
+                # if s has just been updated, reset counters --> no perturbation  # is the global best, or it
+                if s.SinceLastLocalUpdate < 2:  # i == self.GIndex or
+                    s.Kappa = 0
+                    s.Tau = 0
+                    continue
+                # perturb and reset counters
+                perturbation = [
+                    np.random.normal(
+                        -self.SigmaPerc * (B[j][1] - B[j][0]),
+                        self.SigmaPerc * (B[j][1] - B[j][0]),
+                        1
+                    )[0] for j in range(D)]
+                s.B = [s.B[j] + perturbation[j] for j in range(D)]
+                perturbedParticles[i] = True
+        return perturbedParticles
+
     def Iterate(self, verbose=False):
-        self.UpdatePositions()
         self.UpdateVelocities()
+
+        # update current velocities
+        currentVelocities = [linalg.norm(x.V) for x in self.Solutions]
+        currentAvg = mean(currentVelocities)
+
+        currentCumAvgVelocity = self.CurrentCumAvg
+        currentSize = self.AvgCounter
+        newCumAvgVelocity, newCounter = self.updateMean(currentCumAvgVelocity, currentAvg, currentSize)
+        self.CurrentCumAvg = newCumAvgVelocity
+        # update current velocities
+        if self.Iterations and self.Iterations % self.DetectStallInterval == 0:
+            self.DetectStall()
+            perturbedParticles = self.PerturbPBests()
+            if np.any(perturbedParticles):
+                for pp in range(len(perturbedParticles)):
+                    if perturbedParticles[pp]:
+                        self.Solutions[pp].SocialFactor = 0
+                # forzo aggiornamento della pbest fitness
+                self.UpdateVelocities(perturbedParticles)
+
+        self.UpdatePositions()
         self.UpdateCalculatedFitness()
         self.UpdateLocalBest(verbose)
         self.Iterations = self.Iterations + 1
@@ -121,6 +206,8 @@ class PSO_ring(object):
     def Solve(self, funz, verbose=False, callback=None, dump_best_fitness=None, dump_best_solution=None,
               initial_guess_list=None):
         self.NewCreateParticles(self.NumberOfParticles, self.Dimensions, initial_guess_list=initial_guess_list)
+        self.KappaMax = int(math.log(self.MaxIterations))
+
         logging.info('Launching optimization.')
 
         self.Iterations = 0
@@ -272,8 +359,6 @@ class PSO_ring(object):
 
     def NewCreateParticles(self, n, dim, creation_method={'name': "uniform"}, initial_guess_list=None):
         # initial_guess_list = self.initial_guess_list
-        print("ringpso initial guess list")
-        print(initial_guess_list)
         del self.Solutions[:]
 
         for i in range(n):
@@ -461,40 +546,42 @@ class PSO_ring(object):
 
                 p.X[n] = tv
 
-    def UpdateVelocities(self):
+    def UpdateVelocities(self, ParticlesToUpdate=None):
         """
             Update the velocity of all particles, according to the PSO settings.
         """
+        if not ParticlesToUpdate:
+            ParticlesToUpdate = [True] * self.NumberOfParticles
 
         for numpart, p in enumerate(self.Solutions):
+            if ParticlesToUpdate[numpart]:
+                if self.UseRestart:
+                    if self.getBestIndex != numpart:
+                        distance_from_global_best = linalg.norm(array(self.G.X) - array(p.X))
+                        if distance_from_global_best < self.ProximityThreshold:
+                            if self.Iterations > 0:
+                                print(" * Particle", numpart, "marked for restart")
+                                p.MarkedForRestart = True
+                left, right = (numpart - 1) % self.NumberOfParticles, (numpart + 1) % self.NumberOfParticles
+                neighborhood = [
+                    self.Solutions[left].CalculatedFitness,
+                    p.CalculatedFitness,
+                    self.Solutions[right].CalculatedFitness]
+                id_local_best_neighborhood = neighborhood.index(min(neighborhood))
+                id_local_best = (numpart+(id_local_best_neighborhood-1)) % self.NumberOfParticles
+                local_best = self.Solutions[id_local_best].X
 
-            if self.UseRestart:
-                if self.getBestIndex != numpart:
-                    distance_from_global_best = linalg.norm(array(self.G.X) - array(p.X))
-                    if distance_from_global_best < self.ProximityThreshold:
-                        if self.Iterations > 0:
-                            print(" * Particle", numpart, "marked for restart")
-                            p.MarkedForRestart = True
-            left, right = (numpart - 1) % self.NumberOfParticles, (numpart + 1) % self.NumberOfParticles
-            neighborhood = [
-                self.Solutions[left].CalculatedFitness,
-                p.CalculatedFitness,
-                self.Solutions[right].CalculatedFitness]
-            id_local_best_neighborhood = neighborhood.index(min(neighborhood))
-            id_local_best = (numpart+(id_local_best_neighborhood-1)) % self.NumberOfParticles
-            local_best = self.Solutions[id_local_best].X
+                for n in range(len(p.X)):
 
-            for n in range(len(p.X)):
+                    fattore1 = self.Inertia * p.V[n]
+                    fattore2 = random.random() * self.Inertia * self.CognitiveFactor * (p.B[n] - p.X[n])
+                    fattore3 = random.random() * self.Inertia * self.SocialFactor * (local_best[n] - p.X[n])
 
-                fattore1 = self.Inertia * p.V[n]
-                fattore2 = random.random() * self.Inertia * self.CognitiveFactor * (p.B[n] - p.X[n])
-                fattore3 = random.random() * self.Inertia * self.SocialFactor * (local_best[n] - p.X[n])
+                    newvelocity = fattore1 + fattore2 + fattore3
 
-                newvelocity = fattore1 + fattore2 + fattore3
+                    if newvelocity > self.MaxVelocity:
+                        newvelocity = self.MaxVelocity
+                    elif newvelocity < -self.MaxVelocity:
+                        newvelocity = -self.MaxVelocity
 
-                if newvelocity > self.MaxVelocity:
-                    newvelocity = self.MaxVelocity
-                elif newvelocity < -self.MaxVelocity:
-                    newvelocity = -self.MaxVelocity
-
-                p.V[n] = newvelocity
+                    p.V[n] = newvelocity

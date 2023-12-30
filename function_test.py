@@ -12,7 +12,7 @@ from benchmarks.soo.limits import limits
 from benchmarks.soo.functions import functions
 import numpy as np
 # from fstpso import FuzzyPSO
-from fstpso_original import FuzzyPSO
+# from fstpso_original import FuzzyPSO
 
 from fstpso_custom import StallFuzzyPSO
 # from fstpso_stu import StuFuzzyPSO
@@ -62,11 +62,6 @@ if __name__ == "__main__":
     basins_iters = []
 
     f = functions[args.fitness]
-
-
-    def callback():
-        pass
-
 
     numberofparticles = 50  # int(10 + 2 * math.sqrt(args.D))
 
@@ -176,7 +171,7 @@ if __name__ == "__main__":
     FP.Boundaries = search_space
     FP.FITNESS = f
 
-    NFEcur = 0
+    """NFEcur = 0
     curpop = 0
     SEQ = []
     curpop = numberofparticles
@@ -189,7 +184,8 @@ if __name__ == "__main__":
         NFEcur += curpop
         if NFEcur >= budget:
             break
-    est_iterations = len(SEQ) - 2
+    est_iterations = len(SEQ) - 2"""
+    est_iterations = int((budget-numberofparticles)/numberofparticles) - 1
 
     FP.MaxIterations = est_iterations
     FP.set_number_of_particles(numberofparticles)
@@ -200,10 +196,13 @@ if __name__ == "__main__":
     counter_exploration_PSO = copy.deepcopy(counter_exploration)
     particles_counters_PSO = copy.deepcopy(particles_counters)
 
-    gbest_PSO = copy.deepcopy(global_best_per_iter)
     initial_population = copy.deepcopy(populations[0])
     del populations
     populations = []
+    # gbest initial population
+    gbest_0 = np.min([f(s) for s in initial_population])
+    global_best_per_iter.insert(0, gbest_0)
+    gbest_PSO = copy.deepcopy(global_best_per_iter)
     velocities_iter_PSO = copy.deepcopy(velocities_iter)
     del counter_exploration
     counter_exploration = [0, 0, 0, 0, 0]
@@ -211,6 +210,9 @@ if __name__ == "__main__":
     velocities_iter = []
     del particles_counters
     particles_counters = []
+    # basins initial population
+    basins_to_add = set([tuple(np.round(X) + np.zeros(args.D)) for X in initial_population])
+    basins_iters.insert(0, basins_to_add)
     basins_iters_PSO = copy.deepcopy(basins_iters)
     del basins_iters
     basins_iters = []
@@ -220,7 +222,7 @@ if __name__ == "__main__":
     # load previous population
     # FP = StallFuzzyPSO(SigmaPerc=0.05)  # int(math.log(budget))
     # FSTPSO
-    FP = FuzzyPSO()
+    FP = StallFuzzyPSO()
     FP.set_fitness(f)
     FP.set_search_space(search_space)
     FP.MaxIterations = est_iterations
@@ -231,22 +233,28 @@ if __name__ == "__main__":
         'function': callback_partial
     }
     FP.set_swarm_size(numberofparticles)
-    # gbest initial population
-    gbest_0 = np.min([f(s) for s in initial_population])  # ] * numberofparticles
-    # gbest_PSO.insert(0, gbest_0)
+
+
     print("FSTPSO")
-    FP.solve_with_fstpso(callback=callback_param, initial_guess_list=initial_population, max_FEs=budget)
+    FP.solve_with_fstpso(
+        callback=callback_param,
+        initial_guess_list=initial_population,
+        max_FEs=budget,
+        max_iter=est_iterations
+    )
     print(f"iters: {FP.MaxIterations}")
-    basins_iters.insert(0, set([tuple(np.round(X) + np.zeros(args.D)) for X in initial_population]))
+
     counter_exploration_FSTPSO = copy.deepcopy(counter_exploration)
     particles_counters_FSTPSO = copy.deepcopy(particles_counters)
 
-    gbest_FSTPSO = copy.deepcopy(global_best_per_iter)
     # gbest initial population
-    gbest_FSTPSO.insert(0, gbest_0)
+    global_best_per_iter.insert(0, gbest_0)
+    gbest_FSTPSO = copy.deepcopy(global_best_per_iter)
 
     velocities_iter_FSTPSO = copy.deepcopy(velocities_iter)
 
+    # basins initial population
+    basins_iters.insert(0, basins_to_add)
     basins_iters_FSTPSO = copy.deepcopy(basins_iters)
 
     del counter_exploration
@@ -260,7 +268,7 @@ if __name__ == "__main__":
     global_best_per_iter = []
     curr_sum = 0
 
-    callback_partial = functools.partial(callback_PSO)
+    callback_partial = functools.partial(callback_FSTPSO)
     callback_param = {
         'interval': 1,
         'function': callback_partial
@@ -279,30 +287,34 @@ if __name__ == "__main__":
     print(f"iters: {FP.MaxIterations}")
     counter_exploration_RINGPSO = copy.deepcopy(counter_exploration)
     particles_counters_RINGPSO = copy.deepcopy(particles_counters)
-
+    # gbest initial population
+    global_best_per_iter.insert(0, gbest_0)
     gbest_RINGPSO = copy.deepcopy(global_best_per_iter)
 
-    print(f"bests: PSO: {gbest_PSO[0]}, FSTPSO: {gbest_FSTPSO[0]}, RINGPSO: {gbest_RINGPSO[0]}")
-    print(f"lens: PSO: {len(gbest_PSO)}, FSTPSO: {len(gbest_FSTPSO)}, RINGPSO: {len(gbest_RINGPSO)}")
-    # gbest initial population
-    # gbest_RINGPSO.insert(0, gbest_0)
+    # basins initial population
+    basins_iters.insert(0, basins_to_add)
+    basins_iters_RINGPSO = copy.deepcopy(basins_iters)
 
+    print(f"bests: PSO: {gbest_PSO[-1]}, FSTPSO: {gbest_FSTPSO[-1]}, RINGPSO: {gbest_RINGPSO[-1]}")
+    print(f"first: PSO: {gbest_PSO[0]}, FSTPSO: {gbest_FSTPSO[0]}, RINGPSO: {gbest_RINGPSO[0]}")
+    print(f"second: PSO: {gbest_PSO[1]}, FSTPSO: {gbest_FSTPSO[1]}, RINGPSO: {gbest_RINGPSO[1]}")
+    print(f"third: PSO: {gbest_PSO[2]}, FSTPSO: {gbest_FSTPSO[2]}, RINGPSO: {gbest_RINGPSO[2]}")
+    print(f"lens: PSO: {len(gbest_PSO)}, FSTPSO: {len(gbest_FSTPSO)}, RINGPSO: {len(gbest_RINGPSO)}")
+    print(f"basins: PSO: {len(basins_iters_PSO)}, FSTPSO: {len(basins_iters_FSTPSO)}, RINGPSO: {len(basins_iters_RINGPSO)}")
     velocities_iter_RINGPSO = copy.deepcopy(velocities_iter)
 
-    basins_iters_RINGPSO = copy.deepcopy(basins_iters)
 
     # dump initial population
     with open(
             f'{dir_results_base}/{args.fitness}/{budget_str}/populations/{args.fitness}_{args.D}D_{args.R}R_population.pickle',
             'wb') as f:
         pickle.dump(initial_population, f)
-    # dump gbest no stall
+    # dump gbest per iter
     with open(
             f'{dir_results_base}/{args.fitness}/{budget_str}/gbest_PSO/{args.fitness}_{args.D}D_{args.R}R_gbest_PSO.txt',
             "w") as f:
         for i in gbest_PSO:
             f.write(str(i) + "\n")
-    # dump gbest stall
     with open(
             f'{dir_results_base}/{args.fitness}/{budget_str}/gbest_FSTPSO/{args.fitness}_{args.D}D_{args.R}R_gbest_FSTPSO.txt',
             "w") as f:
@@ -327,6 +339,7 @@ if __name__ == "__main__":
             f'{dir_results_base}/{args.fitness}/{budget_str}/Velocities/{args.fitness}_{args.D}D_{args.R}R_velocities_RINGPSO.pickle',
             'wb') as f:
         pickle.dump(velocities_iter_RINGPSO, f)
+    # dump counters exploration
     with open(
             f"{dir_results_base}/{args.fitness}/{budget_str}/Counters/{args.fitness}_{args.D}D_{args.R}R_counter_exploration_PSO.pickle",
             "wb") as f:
@@ -339,6 +352,7 @@ if __name__ == "__main__":
             f"{dir_results_base}/{args.fitness}/{budget_str}/Counters/{args.fitness}_{args.D}D_{args.R}R_counter_exploration_RINGPSO.pickle",
             "wb") as f:
         pickle.dump(counter_exploration_RINGPSO, f)
+    # dump particles counters
     with open(
             f'{dir_results_base}/{args.fitness}/{budget_str}/Counters/{args.fitness}_{args.D}D_{args.R}R_particles_counters_PSO.pickle',
             'wb') as f:
@@ -351,6 +365,7 @@ if __name__ == "__main__":
             f'{dir_results_base}/{args.fitness}/{budget_str}/Counters/{args.fitness}_{args.D}D_{args.R}R_particles_counters_RINGPSO.pickle',
             'wb') as f:
         pickle.dump(particles_counters_RINGPSO, f)
+    # dump basins per iter
     with open(
             f'{dir_results_base}/{args.fitness}/{budget_str}/Basins/{args.fitness}_{args.D}D_{args.R}R_basins_iters_PSO.pickle',
             'wb') as f:
