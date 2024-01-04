@@ -3,7 +3,7 @@ import sys
 sys.path.insert(0, "code")
 
 for fitness in ["Rastrigin"]:
-    for D in [2, 30]:
+    for D in [2]:
         for B in ["4B"]:
             print(f"f: {fitness}, {D}D, {B}B")
             try:

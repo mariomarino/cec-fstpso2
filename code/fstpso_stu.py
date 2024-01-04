@@ -69,6 +69,8 @@ class Particle(object):
         self.DilationEffect = 0
         self.BubbleExceeded = 0
 
+        self.PreviousPbest = []
+
     def can_move(self):
         if self.cannot_move:
             self.cannot_move = False
@@ -150,7 +152,7 @@ class PSO_new(object):
         # self.MeanOverTime = []
         self.CurrentCumAvg = 0
         self.AvgCounter = 0
-        self.UseDilation = False
+        self.UseDilation = True
         # self.DilationInfo = None
         self.CheckStallInterval = 1  # 25
         # self.PersonalBestInterval = self._threshold_local_update / 2
@@ -470,6 +472,7 @@ class PSO_new(object):
                 else:
                     self.Solutions[i].X = copy.deepcopy(ig)
                     self.Solutions[i].B = copy.deepcopy(ig)
+                    self.Solutions[i].CalculatedFitness = self.FITNESS(ig)
 
             print(" * %d particles created, initial guesses added to the swarm." % n)
         else:
@@ -522,6 +525,8 @@ class PSO_new(object):
         for i in range(len(self.Solutions)):
             if verbose:
                 print(" Solution", i, ":", self.Solutions[i])
+
+            self.Solutions[i].PreviousPbest = copy.deepcopy(self.Solutions[i].B)
             if self.Solutions[i].CalculatedFitness < self.Solutions[i].CalculatedBestFitness:
                 self.Solutions[i].SinceLastLocalUpdate = 0
                 if verbose: print(" * New best position for particle", i, "has fitness",
@@ -723,6 +728,41 @@ class StuFuzzyPSO(PSO_new):
                 " * Maximum number of iterations without any update of the global best set to %d" % max_iter_without_new_global_best)
         self._overall_fitness_evaluations = 0
 
+    def TerminationCriterion(self, verbose=False):
+        """
+            This new method for termination criterion verification
+            supports FES exaustion.
+        """
+
+        if verbose:
+            print(" * Iteration:", self.Iterations),
+            print("   since last global update:", self.SinceLastGlobalUpdate)
+
+        if self.StopOnGoodFitness == True:
+            if self.G.CalculatedFitness < self.GoodFitness:
+                if verbose:
+                    print(" * Optimal fitness reached", self.G.CalculatedFitness)
+                return True
+
+        if self.SinceLastGlobalUpdate > self.MaxNoUpdateIterations:
+            if verbose:
+                print(" * Maximum number of iterations without a global best update was reached")
+            return True
+
+        # print (" * Iteration %d: used %d/%d f.e." % (self.Iterations, self._overall_fitness_evaluations, self._FES))
+
+        if self._FES is not None:
+            if self._overall_fitness_evaluations >= self._FES:
+                print(" * Budget of fitness evaluations exhausted after %d iterations." % (self.Iterations + 1))
+                return True
+        else:
+            if self.Iterations >= self.MaxIterations:
+                if verbose:
+                    print(" * Maximum iterations reached.")
+                return True
+            else:
+                return False
+
     def solve_with_fstpso(self,
                           max_iter=None, max_iter_without_new_global_best=None, max_FEs=None,
                           creation_method={'name': "uniform"},
@@ -780,13 +820,15 @@ class StuFuzzyPSO(PSO_new):
 
             self._overall_fitness_evaluations += self.numberofparticles
             self.Iterations = 0
+            if initial_guess_list is not None:
+                self._overall_fitness_evaluations -= self.numberofparticles
         else:
             self._load_checkpoint(restart_from_checkpoint, verbose)
 
         # Dilation stuff
         # self.MaxSparseness = self.CalculateMaxSparseness()
         # self.NormalizationDistance = 2*pow(self.numberofparticles,2)*math.sqrt(self.Dimensions)*max([self.Boundaries[n][1] - self.Boundaries[n][0] for n in range(0,self.Dimensions)])
-
+        self.MaxIterations = int((max_FEs - self.numberofparticles) / self.numberofparticles)
         return self._actually_launch_optimization(verbose=verbose, callback=callback,
                                                   dump_best_solution=dump_best_solution,
                                                   dump_best_fitness=dump_best_fitness)
@@ -796,6 +838,9 @@ class StuFuzzyPSO(PSO_new):
         if verbose:
             print(" * Enabled settings:", " ".join(map(lambda x: "[%s]" % x, self.enabled_settings)))
         print(f"\n *** All prepared, launching optimization, funname: {self.funname}, seedn: {self.SeedNumber}***")
+        print("FES")
+        print(self._FES)
+        print(self._overall_fitness_evaluations)
         result = self.Solve(None, verbose=verbose, callback=callback, dump_best_solution=dump_best_solution,
                             dump_best_fitness=dump_best_fitness)
         return result
@@ -1622,41 +1667,6 @@ class StuFuzzyPSO(PSO_new):
                 p.VelocityOverTime.append(newvelocity)
 
     # logging.info('Particles velocities updated.')
-
-    def TerminationCriterion(self, verbose=False):
-        """
-			This new method for termination criterion verification
-			supports FES exaustion.
-		"""
-
-        if verbose:
-            print(" * Iteration:", self.Iterations),
-            print("   since last global update:", self.SinceLastGlobalUpdate)
-
-        if self.StopOnGoodFitness == True:
-            if self.G.CalculatedFitness < self.GoodFitness:
-                if verbose:
-                    print(" * Optimal fitness reached", self.G.CalculatedFitness)
-                return True
-
-        if self.SinceLastGlobalUpdate > self.MaxNoUpdateIterations:
-            if verbose:
-                print(" * Maximum number of iterations without a global best update was reached")
-            return True
-
-        # print (" * Iteration %d: used %d/%d f.e." % (self.Iterations, self._overall_fitness_evaluations, self._FES))
-
-        if self._FES is not None:
-            if self._overall_fitness_evaluations >= self._FES:
-                print(" * Budget of fitness evaluations exhausted after %d iterations." % (self.Iterations + 1))
-                return True
-        else:
-            if self.Iterations > self.MaxIterations:
-                if verbose:
-                    print(" * Maximum iterations reached.")
-                return True
-            else:
-                return False
 
 
 def calculate_max_distance(interval):

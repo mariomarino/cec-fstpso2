@@ -20,6 +20,7 @@ from fstpso_remedy_1 import FuzzyPSO_remedy_1
 from fstpso_remedy_2 import FuzzyPSO_remedy_2
 from fstpso_remedy_3 import FuzzyPSO_remedy_3
 from fstpso_remedy_4 import FuzzyPSO_remedy_4
+from fstpso_stu import StuFuzzyPSO
 
 
 remedy_map = {
@@ -31,6 +32,7 @@ remedy_map = {
     "fstpso_remedy_2": FuzzyPSO_remedy_2,
     "fstpso_remedy_3": FuzzyPSO_remedy_3,
     "fstpso_remedy_4": FuzzyPSO_remedy_4,
+    "stufstpso": StuFuzzyPSO,
 }
 
 
@@ -193,7 +195,6 @@ if __name__ == "__main__":
             "w") as f:
         for i in gbest_remedy:
             f.write(str(i) + "\n")
-
     # dump velocities
     with open(
             f'{dir_results_base}/{args.fitness}/{budget_str}/Velocities/{args.fitness}_{args.D}D_{args.R}R_velocities_{remedy_name}.pickle',
@@ -205,10 +206,10 @@ if __name__ == "__main__":
             "wb") as f:
         pickle.dump(counter_exploration_remedy, f)
     # dump particles counters
-        with open(
-                f'{dir_results_base}/{args.fitness}/{budget_str}/Counters/{args.fitness}_{args.D}D_{args.R}R_particles_counters_{remedy_name}.pickle',
-                'wb') as f:
-            pickle.dump(particles_counters_remedy, f)
+    with open(
+            f'{dir_results_base}/{args.fitness}/{budget_str}/Counters/{args.fitness}_{args.D}D_{args.R}R_particles_counters_{remedy_name}.pickle',
+            'wb') as f:
+        pickle.dump(particles_counters_remedy, f)
     # dump basins per iter
     with open(
             f'{dir_results_base}/{args.fitness}/{budget_str}/Basins/{args.fitness}_{args.D}D_{args.R}R_basins_iters_{remedy_name}.pickle',

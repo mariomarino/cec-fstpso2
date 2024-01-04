@@ -33,6 +33,30 @@ class StallFuzzyPSO(fstpso.FuzzyPSO):
         self.CognitiveOverTime = []
         self.InertiaOverTime = []
 
+    def TerminationCriterion(self, verbose=False):
+
+        if verbose:
+            print("Iteration:", self.Iterations)
+            print(", since last global update:", self.SinceLastGlobalUpdate)
+
+        if self.StopOnGoodFitness == True:
+            if self.G.CalculatedFitness < self.GoodFitness:
+                if verbose:
+                    print("Good fitness reached!", self.G.CalculatedFitness)
+                return True
+
+        if self.SinceLastGlobalUpdate > self.MaxNoUpdateIterations:
+            if verbose:
+                print("Too many iterations without new global best")
+            return True
+
+        if self.Iterations >= self.MaxIterations:
+            if verbose:
+                print("Maximum iterations reached")
+            return True
+        else:
+            return False
+
     def NewCreateParticles(self, n, dim, creation_method={'name': "uniform"}, initial_guess_list=None):
 
         del self.Solutions[:]

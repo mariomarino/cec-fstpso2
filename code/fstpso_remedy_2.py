@@ -397,6 +397,8 @@ class FuzzyPSO_remedy_2(fstpso.FuzzyPSO):
                                     initial_guess_list=initial_guess_list)
             self._overall_fitness_evaluations += self.numberofparticles
             self.Iterations = 0
+            if initial_guess_list is not None:
+                self._overall_fitness_evaluations -= self.numberofparticles
         else:
             self._load_checkpoint(restart_from_checkpoint, verbose)
         self.MaxIterations = int((max_FEs - self.numberofparticles) / self.numberofparticles)

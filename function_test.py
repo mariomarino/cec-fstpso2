@@ -12,7 +12,7 @@ from benchmarks.soo.limits import limits
 from benchmarks.soo.functions import functions
 import numpy as np
 # from fstpso import FuzzyPSO
-# from fstpso_original import FuzzyPSO
+from fstpso_original import FuzzyPSO
 
 from fstpso_custom import StallFuzzyPSO
 # from fstpso_stu import StuFuzzyPSO
@@ -222,7 +222,7 @@ if __name__ == "__main__":
     # load previous population
     # FP = StallFuzzyPSO(SigmaPerc=0.05)  # int(math.log(budget))
     # FSTPSO
-    FP = StallFuzzyPSO()
+    FP = FuzzyPSO()
     FP.set_fitness(f)
     FP.set_search_space(search_space)
     FP.MaxIterations = est_iterations

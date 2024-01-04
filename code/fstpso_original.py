@@ -331,6 +331,7 @@ class PSO_new(object):
                 else:
                     self.Solutions[i].X = copy.deepcopy(ig)
                     self.Solutions[i].B = copy.deepcopy(ig)
+                    self.Solutions[i].CalculatedFitness = self.FITNESS(ig)
 
             print(" * %d particles created, initial guesses added to the swarm." % n)
         else:
@@ -632,6 +633,8 @@ class FuzzyPSO(PSO_new):
                                     initial_guess_list=initial_guess_list)
             self._overall_fitness_evaluations += self.numberofparticles
             self.Iterations = 0
+            if initial_guess_list is not None:
+                self._overall_fitness_evaluations -= self.numberofparticles
         else:
             self._load_checkpoint(restart_from_checkpoint, verbose)
 
@@ -644,6 +647,9 @@ class FuzzyPSO(PSO_new):
         if verbose:
             print(" * Enabled settings:", " ".join(map(lambda x: "[%s]" % x, self.enabled_settings)))
         print("\n *** All prepared, launching optimization ***")
+        print("FES")
+        print(self._FES)
+        print(self._overall_fitness_evaluations)
         result = self.Solve(None, verbose=verbose, callback=callback, dump_best_solution=dump_best_solution,
                             dump_best_fitness=dump_best_fitness)
         return result

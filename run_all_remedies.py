@@ -1,7 +1,8 @@
 import subprocess as sb
 
-remedy_names = (["pso_ring_remedy_1", "pso_ring_remedy_2", "pso_ring_remedy_3", "pso_ring_remedy_4"]+
-                ["fstpso_remedy_1", "fstpso_remedy_2", "fstpso_remedy_3", "fstpso_remedy_4"])
+remedy_names = (["pso_ring_remedy_1", "pso_ring_remedy_2", "pso_ring_remedy_3", "pso_ring_remedy_4"] +
+                ["fstpso_remedy_1", "fstpso_remedy_2", "fstpso_remedy_3", "fstpso_remedy_4", "stufstpso"])
+# remedy_names = ["fstpso_remedy_1", "stufstpso"]
 
 # ["pso_ring_remedy_1", "pso_ring_remedy_2", "pso_ring_remedy_3", "pso_ring_remedy_4"]
 
