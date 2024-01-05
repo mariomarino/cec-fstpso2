@@ -374,8 +374,6 @@ class FuzzyPSO_remedy_2(fstpso.FuzzyPSO):
                 :param KappaMax:
         """
 
-        self.DetectStallInterval = 0.1 * self.MaxIterations
-        self.KappaMax = int(math.log(self.MaxIterations))
         self.NewCreateParticles(self.NumberOfParticles, self.Dimensions, initial_guess_list=initial_guess_list)
 
         # first step: check potential errors in FST-PSO's initialization
@@ -402,6 +400,8 @@ class FuzzyPSO_remedy_2(fstpso.FuzzyPSO):
         else:
             self._load_checkpoint(restart_from_checkpoint, verbose)
         self.MaxIterations = int((max_FEs - self.numberofparticles) / self.numberofparticles)
+        self.DetectStallInterval = 0.1 * self.MaxIterations
+        # self.KappaMax = int(math.log(self.MaxIterations))
         return self._actually_launch_optimization(verbose=verbose, callback=callback,
                                                   dump_best_solution=dump_best_solution,
                                                   dump_best_fitness=dump_best_fitness)

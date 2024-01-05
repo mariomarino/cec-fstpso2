@@ -48,7 +48,10 @@ def plotConvergence(gbests, dir_name, filename, labels, title="", labels_legend=
         fevs = list(range(len(gbests[gb])))
         print(f"gb: {gb}")
         print(len(fevs), len(gbests[gb]))
-        plt.plot(fevs, gbests[gb], label=labels[gb], color=cmap[gb])
+        if labels[gb] == "stufstpso":
+            plt.plot(fevs, gbests[gb], label=labels[gb], color="black")
+        else:
+            plt.plot(fevs, gbests[gb], label=labels[gb], color=cmap[gb])
     plt.xlabel("Fitness evaluation", fontsize=12)
     plt.ylabel("Best fitness", fontsize=12, c='black')
     plt.tick_params(axis='both', labelsize=10)
@@ -146,8 +149,11 @@ def plotBasins(basins, labels=None, title="", dir_name="", filename="", labels_l
     # plt.style.use("seaborn-v0_8-colorblind")
     plt.title(title, fontsize="14")
     cmap = (plt.get_cmap("colorblind")).colors
-    for b in range(len(basins)):
-        plt.plot(iters, basins[b], label=labels[b], color=cmap[b])
+    for gb in range(len(basins)):
+        if labels[gb] == "stufstpso":
+            plt.plot(iters, basins[gb], label=labels[gb], color="black")
+        else:
+            plt.plot(iters, basins[gb], label=labels[gb], color=cmap[gb])
     plt.xlabel("Iteration", fontsize=12)
     plt.ylabel("N", fontsize=12, c='black')
     plt.tick_params(axis='both', labelsize=10)
@@ -166,7 +172,7 @@ def main(D=30, fitness="Rastrigin", budget_str="4B", budget=30 * 1e4, dir_result
 
     f_fitness = functions[fitness]
 
-    sns_palette = sns.color_palette("colorblind", n_colors=12, as_cmap=True) + ["gray", "black"]
+    sns_palette = sns.color_palette("colorblind", n_colors=12, as_cmap=True) + ["gray", "brown"]
     print(type(sns_palette))
     sns.set_palette(sns_palette)
 
@@ -690,8 +696,8 @@ if __name__ == "__main__":
     dir_results_base = "results/remedies"
     pathlib.Path(f"{dir_results_base}/plots/{args.fitness}/{args.budget_str}").mkdir(parents=True, exist_ok=True)
 
-    main(D=args.D, fitness=args.fitness, budget_str=args.budget_str, budget=args.D * 1e4,
-         dir_results_base=dir_results_base, remedy_names=remedy_names, remedy_name_label_map=remedy_name_label_map)
+    """main(D=args.D, fitness=args.fitness, budget_str=args.budget_str, budget=args.D * 1e4,
+         dir_results_base=dir_results_base, remedy_names=remedy_names, remedy_name_label_map=remedy_name_label_map)"""
     mainVelocities(D=args.D, fitness=args.fitness, budget_str=args.budget_str, budget=args.D * 1e4,
                    dir_results_base=dir_results_base, remedy_names=remedy_names,
                    remedy_name_label_map=remedy_name_label_map)

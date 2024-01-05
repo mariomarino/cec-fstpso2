@@ -207,7 +207,7 @@ class PSO_ring_remedy_1(object):
               initial_guess_list=None):
         self.NewCreateParticles(self.NumberOfParticles, self.Dimensions, initial_guess_list=initial_guess_list)
         self.DetectStallInterval = 0.1 * self.MaxIterations
-        self.KappaMax = int(math.log(self.MaxIterations))
+        # self.KappaMax = int(math.log(self.MaxIterations))
         logging.info('Launching optimization.')
 
         self.Iterations = 0
