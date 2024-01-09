@@ -10,4 +10,4 @@ cd "cec-fstpso2"
 
 eval "$(conda shell.bash hook)"
 conda activate cec-fstpso
-python code/plots_remedy.py -F $1 -D $2 -B $3
+python code/plots_remedy_a.py -F $1 -D $2 -B $3

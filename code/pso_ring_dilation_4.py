@@ -1,11 +1,15 @@
+# every 10% maxiter, stalling particles' pbest +- 0.5% search sp.
+
 import math
 import logging
 import random
+import numpy as np
 from numpy.random import lognormal
-from numpy import array, zeros, linalg
+from numpy import array, zeros, linalg, mean
 import sys
 import copy
-# import numpy
+import df
+
 import subprocess
 
 
@@ -33,6 +37,9 @@ class Particle(object):
         self.MinSpeedMultiplier = 0
 
         self.PreviousPbest = []
+        self.IsStalling = False
+        self.Tau = 0
+        self.Kappa = 0
 
     def __repr__(self):
         return "<Particle %s>" % str(self.X)
@@ -41,7 +48,7 @@ class Particle(object):
         return "\t".join(map(str, self.X))
 
 
-class PSO_ring(object):
+class PSO_ring_dilation_4(object):
 
     def __repr__(self):
         return str("<PSO instance " + self.ID + ">")
@@ -89,6 +96,14 @@ class PSO_ring(object):
 
         self.initial_guess_list = initial_guess_list
 
+        self.CurrentCumAvg = 0
+        self.AvgCounter = 0
+        self.DetectStallInterval = 1
+        self.SigmaPerc = 0.005
+        self.KappaMax = 0
+
+        self.Dilations = []
+
     def getBestIndex(self):
         index = 0
         best_fitness = self.Solutions[0].CalculatedFitness
@@ -110,9 +125,60 @@ class PSO_ring(object):
     def UpdateInertia(self):
         self.Inertia = self.InertiaStart - (self.InertiaStart - self.InertiaEnd) / self.MaxIterations * self.Iterations
 
+    def updateMean(self, CurrentCumAvg, newValue, currentSize):
+        newSize = currentSize + 1
+        updated = (currentSize * CurrentCumAvg + newValue) / newSize
+
+        return updated, newSize
+
+    def DetectStall(self):
+        currentCumAvgVelocity = self.CurrentCumAvg
+        numStallingParticles = 0
+        del self.Dilations
+        self.Dilations = []
+        for s in self.Solutions:
+            # check velocity vs mean, last update in local best, ecc
+            # update s.IsStalling
+            particleVelocity = linalg.norm(s.V)
+            if s.IsStalling:
+                numStallingParticles += 1
+            if particleVelocity > currentCumAvgVelocity:
+                s.Kappa += 1
+                if s.Kappa <= self.KappaMax:
+                    continue
+                else:
+                    s.IsStalling = True
+                    s.Tau += 1
+            else:
+                s.IsStalling = False
+                s.Kappa = 0
+                s.Tau = 0
+                self.Dilations.append(
+                    {
+                        'center': s.B,
+                        'radius': linalg.norm(array(s.X) - array(s.B)),
+                        'alpha': 5
+                    }
+                )
+
+        return numStallingParticles
+
     def Iterate(self, verbose=False):
-        self.UpdatePositions()
         self.UpdateVelocities()
+
+        # update current velocities
+        currentVelocities = [linalg.norm(x.V) for x in self.Solutions]
+        currentAvg = mean(currentVelocities)
+
+        currentCumAvgVelocity = self.CurrentCumAvg
+        currentSize = self.AvgCounter
+        newCumAvgVelocity, newCounter = self.updateMean(currentCumAvgVelocity, currentAvg, currentSize)
+        self.CurrentCumAvg = newCumAvgVelocity
+
+        if self.Iterations and self.Iterations % self.DetectStallInterval == 0:
+            self.DetectStall()
+
+        self.UpdatePositions()
         self.UpdateCalculatedFitness()
         self.UpdateLocalBest(verbose)
         self.Iterations = self.Iterations + 1
@@ -121,12 +187,13 @@ class PSO_ring(object):
     def Solve(self, funz, verbose=False, callback=None, dump_best_fitness=None, dump_best_solution=None,
               initial_guess_list=None):
         self.NewCreateParticles(self.NumberOfParticles, self.Dimensions, initial_guess_list=initial_guess_list)
+        self.DetectStallInterval = 1  # 0.1 * self.MaxIterations
+        self.KappaMax = int(math.log(self.MaxIterations))
         logging.info('Launching optimization.')
 
         self.Iterations = 0
         if verbose:
             print("Process started")
-
         while (not self.TerminationCriterion(verbose=verbose)):
             if funz != None:    funz(self)
             self.Iterate(verbose)
@@ -216,7 +283,7 @@ class PSO_ring(object):
         print(self.NumberOfParticles, "particles autocreated")
 
     def NewGenerate(self, lista, creation_method, initial_guess_list=None):
-        #initial_guess_list = self.initial_guess_list
+        # initial_guess_list = self.initial_guess_list
         ret = []
 
         if creation_method['name'] == "uniform":
@@ -273,8 +340,6 @@ class PSO_ring(object):
 
     def NewCreateParticles(self, n, dim, creation_method={'name': "uniform"}, initial_guess_list=None):
         # initial_guess_list = self.initial_guess_list
-        print("ringpso initial guess list")
-        # print(initial_guess_list)
         del self.Solutions[:]
 
         for i in range(n):
@@ -297,7 +362,7 @@ class PSO_ring(object):
             if len(initial_guess_list) > n:
                 print(
                     "ERROR: the number of provided initial guesses (%d) is greater than the swarm size (%d), aborting." % (
-                    len(initial_guess_list), n))
+                        len(initial_guess_list), n))
                 exit(17)
             for i, ig in enumerate(initial_guess_list):
                 if len(ig) != dim:
@@ -438,13 +503,23 @@ class PSO_ring(object):
                     p.MarkedForRestart = False
                     continue
 
-            prev_pos = p.X[:]
+            dest_init = array(p.X)+array(p.V)
+            center = p.X
+            radius = 0.05
+            alpha = 10
+            dist = linalg.norm(array(dest_init) - array(center))
+            dest = []
 
             for n in range(len(p.X)):
 
                 c1 = p.X[n]
                 c2 = p.V[n]
                 tv = c1 + c2
+
+                if p.IsStalling and dist < radius:
+                    BF = df.f(alpha, c2 / radius)
+                    tv = BF * (c2 / dist) * radius + c1
+
                 rnd1 = rnd2 = 0
                 if tv > self.Boundaries[n][1]:
                     if not constrained_damping:
@@ -460,42 +535,47 @@ class PSO_ring(object):
                     else:
                         print("WARNING: constrained damping not implemented")
 
-                p.X[n] = tv
+                dest.append(tv)
 
-    def UpdateVelocities(self):
+            for n in range(len(p.X)):
+                p.X[n] = dest[n]
+
+    def UpdateVelocities(self, ParticlesToUpdate=None):
         """
             Update the velocity of all particles, according to the PSO settings.
         """
+        if not ParticlesToUpdate:
+            ParticlesToUpdate = [True] * self.NumberOfParticles
 
         for numpart, p in enumerate(self.Solutions):
+            if ParticlesToUpdate[numpart]:
+                if self.UseRestart:
+                    if self.getBestIndex != numpart:
+                        distance_from_global_best = linalg.norm(array(self.G.X) - array(p.X))
+                        if distance_from_global_best < self.ProximityThreshold:
+                            if self.Iterations > 0:
+                                print(" * Particle", numpart, "marked for restart")
+                                p.MarkedForRestart = True
+                left, right = (numpart - 1) % self.NumberOfParticles, (numpart + 1) % self.NumberOfParticles
+                neighborhood = [
+                    self.Solutions[left].CalculatedFitness,
+                    p.CalculatedFitness,
+                    self.Solutions[right].CalculatedFitness]
+                id_local_best_neighborhood = neighborhood.index(min(neighborhood))
+                id_local_best = (numpart + (id_local_best_neighborhood - 1)) % self.NumberOfParticles
+                local_best = self.Solutions[id_local_best].X
 
-            if self.UseRestart:
-                if self.getBestIndex != numpart:
-                    distance_from_global_best = linalg.norm(array(self.G.X) - array(p.X))
-                    if distance_from_global_best < self.ProximityThreshold:
-                        if self.Iterations > 0:
-                            print(" * Particle", numpart, "marked for restart")
-                            p.MarkedForRestart = True
-            left, right = (numpart - 1) % self.NumberOfParticles, (numpart + 1) % self.NumberOfParticles
-            neighborhood = [
-                self.Solutions[left].CalculatedFitness,
-                p.CalculatedFitness,
-                self.Solutions[right].CalculatedFitness]
-            id_local_best_neighborhood = neighborhood.index(min(neighborhood))
-            id_local_best = (numpart+(id_local_best_neighborhood-1)) % self.NumberOfParticles
-            local_best = self.Solutions[id_local_best].X
+                for n in range(len(p.X)):
 
-            for n in range(len(p.X)):
+                    fattore1 = self.Inertia * p.V[n]
+                    fattore2 = random.random() * self.Inertia * self.CognitiveFactor * (p.B[n] - p.X[n])
+                    fattore3 = random.random() * self.Inertia * self.SocialFactor * (local_best[n] - p.X[n])
 
-                fattore1 = self.Inertia * p.V[n]
-                fattore2 = random.random() * self.Inertia * self.CognitiveFactor * (p.B[n] - p.X[n])
-                fattore3 = random.random() * self.Inertia * self.SocialFactor * (local_best[n] - p.X[n])
+                    newvelocity = fattore1 + fattore2 + fattore3
 
-                newvelocity = fattore1 + fattore2 + fattore3
+                    if newvelocity > self.MaxVelocity:
+                        newvelocity = self.MaxVelocity
+                    elif newvelocity < -self.MaxVelocity:
+                        newvelocity = -self.MaxVelocity
 
-                if newvelocity > self.MaxVelocity:
-                    newvelocity = self.MaxVelocity
-                elif newvelocity < -self.MaxVelocity:
-                    newvelocity = -self.MaxVelocity
-
-                p.V[n] = newvelocity
+                    p.V[n] = newvelocity

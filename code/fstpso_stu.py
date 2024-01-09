@@ -518,7 +518,7 @@ class PSO_new(object):
             else:
                 s.CalculatedFitness = ret
 
-    def UpdateLocalBest(self, verbose=False, semiverbose=True):
+    def UpdateLocalBest(self, verbose=False, semiverbose=False):
 
         if verbose:
             print("Beginning the verification of local bests")
@@ -1546,64 +1546,23 @@ class StuFuzzyPSO(PSO_new):
             print(
                 f"Fun: {self.funname}, Dilation: {self.UseDilation}, Seedn: {self.SeedNumber}, Particle: {p.ID}, Iteration: {self.Iterations}/{self.MaxIterations}, R: {R}")
             dilation_diff = []
-            BubbleExceeded = False
-            # norm = linalg.norm(array(p.V))
-            # BF = df.f(alpha,norm/R)
-            # BF = df.h(gamma,norm/R)
-            # BF = df.g(beta,norm/R)
             for n in range(len(p.X)):
                 c1 = p.X[n]
                 c2 = p.V[n]
 
                 tv = c1 + c2
 
-                # error
-                # InBubble = False
-                # error
-
-                # noerror
-                """if self.UseDilation and p.IsStalling and InBubble:
-					p.b0[n] = tv
-					tv_old = tv
-					diff = tv - actual_center[n]
-					sign = int(choice([-1,1], 1, p = self.SignProbabilities))
-					#tv = actual_center[n] + (BF * (diff/actual_x_c_norm) * R) 
-					tv = c1 + c2*sign #actual_center[n] + (BF * (diff/actual_x_c_norm) * R)*sign
-					dilation_diff.append(tv-tv_old)
-					p.R = R
-					p.gamma = gamma
-					#p.alpha = alpha"""
-                # noerror
-
-                # error
                 if self.UseDilation and p.IsStalling:
                     BF = df.f(alpha, c2 / R)
-                    # BF = df.h(gamma,c2/R)
-                    # BF = df.g(beta,c2/R)
+
                     p.b0[n] = tv
                     tv_old = tv
 
-                    # diff = tv - c1[n]
                     tv = BF * (c2 / original_x_c_norm) * R + c1
-                    # if tv > c1 + R:
-                    # BubbleExceeded = True
-                    """if sign(float(c2)) != sign(float(BF)):
-						#counter_switches += 1
-						counter_negatives += 1
-					if sign(float(c2)) == sign(float(BF)) == 1.0:
-						counter_positives += 1
-					if sign(float(c2)) == sign(float(BF)) == -1.0:
-						#counter_negatives += 1
-						counter_switches += 1
-					if sign(float(c2)) == sign(float(BF)) == 0.0:
-						counter_zeros += 1"""
 
                     dilation_diff.append(tv - tv_old)
                     p.R = R
                     p.alpha = alpha
-                # p.beta=beta
-                # p.gamma = gamma
-                # error
 
                 rnd1 = rnd2 = 0
                 if tv > self.Boundaries[n][1]:

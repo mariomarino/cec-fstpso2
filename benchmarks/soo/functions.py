@@ -6,9 +6,9 @@ from .definitions.standard import mishra01, quintic, michalewicz, shubert, alpin
 from .definitions.perturbed import ackley_shifted, ackley_shrinked, alpine01_shrinked, alpine01_shifted,\
     rosenbrock_shrinked, rosenbrock_shifted, sphere_shrinked, sphere_shifted
 # CEC 2022
-"""from .definitions.CEC.TestSuite2022.CPP.cec2022 import cec22_f1, cec22_f2, cec22_f3, cec22_f4, cec22_f5, cec22_f6,\
+from .definitions.CEC.TestSuite2022.CPP.cec2022 import cec22_f1, cec22_f2, cec22_f3, cec22_f4, cec22_f5, cec22_f6,\
     cec22_f7, cec22_f8, cec22_f9, cec22_f10, cec22_f11, cec22_f12
-# CEC 2021 - Basic
+""""# CEC 2021 - Basic
 from .definitions.CEC.TestSuite2021.cec2021 import cec21_f1_basic, cec21_f2_basic, cec21_f3_basic, cec21_f4_basic,\
     cec21_f5_basic, cec21_f6_basic, cec21_f7_basic, cec21_f8_basic, cec21_f9_basic, cec21_f10_basic
 # CEC 2021 - Bias
@@ -38,14 +38,14 @@ from .definitions.CEC.TestSuite2021.cec2021 import cec21_f1_shift_rot, cec21_f2_
     cec21_f9_shift_rot, cec21_f10_shift_rot
 # CEC 2019
 from .definitions.CEC.TestSuite2019.cec2019 import cec19_f1, cec19_f2, cec19_f3, cec19_f4, cec19_f5, cec19_f6,\
-    cec19_f7, cec19_f8, cec19_f9, cec19_f10
+    cec19_f7, cec19_f8, cec19_f9, cec19_f10"""
 # CEC 2017
 from .definitions.CEC.TestSuite2017.cec2017 import cec17_f1, cec17_f2, cec17_f3, cec17_f4, cec17_f5, cec17_f6,\
     cec17_f7, cec17_f8, cec17_f9, cec17_f10, cec17_f11, cec17_f12, cec17_f13, cec17_f14, cec17_f15, cec17_f16,\
     cec17_f17, cec17_f18, cec17_f19, cec17_f20, cec17_f21, cec17_f22, cec17_f23, cec17_f24, cec17_f25, cec17_f26,\
     cec17_f27, cec17_f28, cec17_f29, cec17_f30
 # CEC 2014
-from .definitions.CEC.TestSuite2014.cec2014 import cec14_f1, cec14_f2, cec14_f3, cec14_f4, cec14_f5, cec14_f6,\
+"""from .definitions.CEC.TestSuite2014.cec2014 import cec14_f1, cec14_f2, cec14_f3, cec14_f4, cec14_f5, cec14_f6,\
     cec14_f7, cec14_f8, cec14_f9, cec14_f10, cec14_f11, cec14_f12, cec14_f13, cec14_f14, cec14_f15, cec14_f16,\
     cec14_f17, cec14_f18, cec14_f19, cec14_f20, cec14_f21, cec14_f22, cec14_f23, cec14_f24, cec14_f25, cec14_f26,\
     cec14_f27, cec14_f28, cec14_f29, cec14_f30
@@ -129,8 +129,39 @@ functions = {
     'Rosenbrock_shifted': rosenbrock_shifted,
     # N-D Perturbed Test Functions S
     'Sphere_shrinked': sphere_shrinked,
-    'Sphere_shifted': sphere_shifted, }
-"""# CEC 2022
+    'Sphere_shifted': sphere_shifted,
+    # CEC 2017
+    'CEC17-F1': cec17_f1,
+    'CEC17-F2': cec17_f2,
+    'CEC17-F3': cec17_f3,
+    'CEC17-F4': cec17_f4,
+    'CEC17-F5': cec17_f5,
+    'CEC17-F6': cec17_f6,
+    'CEC17-F7': cec17_f7,
+    'CEC17-F8': cec17_f8,
+    'CEC17-F9': cec17_f9,
+    'CEC17-F10': cec17_f10,
+    'CEC17-F11': cec17_f11,
+    'CEC17-F12': cec17_f12,
+    'CEC17-F13': cec17_f13,
+    'CEC17-F14': cec17_f14,
+    'CEC17-F15': cec17_f15,
+    'CEC17-F16': cec17_f16,
+    'CEC17-F17': cec17_f17,
+    'CEC17-F18': cec17_f18,
+    'CEC17-F19': cec17_f19,
+    'CEC17-F20': cec17_f20,
+    'CEC17-F21': cec17_f21,
+    'CEC17-F22': cec17_f22,
+    'CEC17-F23': cec17_f23,
+    'CEC17-F24': cec17_f24,
+    'CEC17-F25': cec17_f25,
+    'CEC17-F26': cec17_f26,
+    'CEC17-F27': cec17_f27,
+    'CEC17-F28': cec17_f28,
+    'CEC17-F29': cec17_f29,
+    'CEC17-F30': cec17_f30,
+    # CEC 2022
     'CEC22-F1': cec22_f1,
     'CEC22-F2': cec22_f2,
     'CEC22-F3': cec22_f3,
@@ -142,9 +173,9 @@ functions = {
     'CEC22-F9': cec22_f9,
     'CEC22-F10': cec22_f10,
     'CEC22-F11': cec22_f11,
-    'CEC22-F12': cec22_f12,
+    'CEC22-F12': cec22_f12, }
 
-    # CEC 2021 - Basic
+""""# CEC 2021 - Basic
     'CEC21-F1-Basic': cec21_f1_basic,
     'CEC21-F2-Basic': cec21_f2_basic,
     'CEC21-F3-Basic': cec21_f3_basic,
@@ -251,38 +282,6 @@ functions = {
     'CEC19-F8': cec19_f8,
     'CEC19-F9': cec19_f9,
     'CEC19-F10': cec19_f10,
-
-    # CEC 2017
-    'CEC17-F1': cec17_f1,
-    'CEC17-F2': cec17_f2,
-    'CEC17-F3': cec17_f3,
-    'CEC17-F4': cec17_f4,
-    'CEC17-F5': cec17_f5,
-    'CEC17-F6': cec17_f6,
-    'CEC17-F7': cec17_f7,
-    'CEC17-F8': cec17_f8,
-    'CEC17-F9': cec17_f9,
-    'CEC17-F10': cec17_f10,
-    'CEC17-F11': cec17_f11,
-    'CEC17-F12': cec17_f12,
-    'CEC17-F13': cec17_f13,
-    'CEC17-F14': cec17_f14,
-    'CEC17-F15': cec17_f15,
-    'CEC17-F16': cec17_f16,
-    'CEC17-F17': cec17_f17,
-    'CEC17-F18': cec17_f18,
-    'CEC17-F19': cec17_f19,
-    'CEC17-F20': cec17_f20,
-    'CEC17-F21': cec17_f21,
-    'CEC17-F22': cec17_f22,
-    'CEC17-F23': cec17_f23,
-    'CEC17-F24': cec17_f24,
-    'CEC17-F25': cec17_f25,
-    'CEC17-F26': cec17_f26,
-    'CEC17-F27': cec17_f27,
-    'CEC17-F28': cec17_f28,
-    'CEC17-F29': cec17_f29,
-    'CEC17-F30': cec17_f30,
 
     # CEC 2014
     'CEC14-F1': cec14_f1,

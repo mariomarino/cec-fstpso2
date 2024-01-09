@@ -12,18 +12,28 @@ from benchmarks.soo.limits import limits
 from benchmarks.soo.functions import functions
 import numpy as np
 
-from pso_ring_remedy_1 import PSO_ring_remedy_1
-from pso_ring_remedy_2 import PSO_ring_remedy_2
-from pso_ring_remedy_3 import PSO_ring_remedy_3
-from pso_ring_remedy_4 import PSO_ring_remedy_4
-from fstpso_remedy_1 import FuzzyPSO_remedy_1
+"""from pso_ring_remedy_1a import PSO_ring_remedy_1a
+from pso_ring_remedy_2a import PSO_ring_remedy_2a
+from pso_ring_remedy_3a import PSO_ring_remedy_3a
+from pso_ring_remedy_4a import PSO_ring_remedy_4a
+from pso_ring_remedy_1a1 import PSO_ring_remedy_1a1
+from pso_ring_remedy_2a1 import PSO_ring_remedy_2a1
+from pso_ring_remedy_3a1 import PSO_ring_remedy_3a1
+from pso_ring_remedy_4a1 import PSO_ring_remedy_4a1"""
+"""from fstpso_remedy_1 import FuzzyPSO_remedy_1
 from fstpso_remedy_2 import FuzzyPSO_remedy_2
 from fstpso_remedy_3 import FuzzyPSO_remedy_3
-from fstpso_remedy_4 import FuzzyPSO_remedy_4
+from fstpso_remedy_4 import FuzzyPSO_remedy_4"""
+from pso_ring_dilation_1 import PSO_ring_dilation_1
+from pso_ring_dilation_2 import PSO_ring_dilation_2
+from pso_ring_dilation_3 import PSO_ring_dilation_3
+from pso_ring_dilation_4 import PSO_ring_dilation_4
+from pso_ring_dilation_5 import PSO_ring_dilation_5
+from pso_ring_dilation_6 import PSO_ring_dilation_6
 from fstpso_stu import StuFuzzyPSO
 
 
-remedy_map = {
+"""remedy_map = {
     "pso_ring_remedy_1": PSO_ring_remedy_1,
     "pso_ring_remedy_2": PSO_ring_remedy_2,
     "pso_ring_remedy_3": PSO_ring_remedy_3,
@@ -33,6 +43,27 @@ remedy_map = {
     "fstpso_remedy_3": FuzzyPSO_remedy_3,
     "fstpso_remedy_4": FuzzyPSO_remedy_4,
     "stufstpso": StuFuzzyPSO,
+}"""
+
+"""remedy_map = {
+    "pso_ring_remedy_1a": PSO_ring_remedy_1a,
+    "pso_ring_remedy_2a": PSO_ring_remedy_2a,
+    "pso_ring_remedy_3a": PSO_ring_remedy_3a,
+    "pso_ring_remedy_4a": PSO_ring_remedy_4a,
+    "pso_ring_remedy_1a1": PSO_ring_remedy_1a1,
+    "pso_ring_remedy_2a1": PSO_ring_remedy_2a1,
+    "pso_ring_remedy_3a1": PSO_ring_remedy_3a1,
+    "pso_ring_remedy_4a1": PSO_ring_remedy_4a1,
+    "stufstpso": StuFuzzyPSO,
+}"""
+remedy_map = {
+    "pso_ring_dilation_1": PSO_ring_dilation_1,
+    "pso_ring_dilation_2": PSO_ring_dilation_2,
+    "pso_ring_dilation_3": PSO_ring_dilation_3,
+    "pso_ring_dilation_4": PSO_ring_dilation_4,
+    "pso_ring_dilation_5": PSO_ring_dilation_5,
+    "pso_ring_dilation_6": PSO_ring_dilation_6,
+    "stufstpso": StuFuzzyPSO,
 }
 
 
@@ -41,12 +72,12 @@ if __name__ == "__main__":
     parser.add_argument("--function", '-F', dest='fitness', type=str, default="Rastrigin")
     parser.add_argument("--dimensions", '-D', dest='D', type=int)
     parser.add_argument("--run", '-R', dest='R', type=int)
-    parser.add_argument("--remedy", '-RN', dest='remedy_name', type=str, default="pso_ring_remedy_1")
+    parser.add_argument("--remedy", '-RN', dest='remedy_name', type=str, default="stufstpso")
 
     args = parser.parse_args()
 
     remedy_name = args.remedy_name
-    dir_results_base = f'results/{remedy_name}'
+    dir_results_base = f'results_a_5/{remedy_name}'
     budget = 1e4 * args.D
     budget_str = "4B"
 

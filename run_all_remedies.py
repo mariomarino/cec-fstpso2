@@ -1,8 +1,11 @@
 import subprocess as sb
 
-remedy_names = (["pso_ring_remedy_1", "pso_ring_remedy_2", "pso_ring_remedy_3", "pso_ring_remedy_4"] +
-                ["fstpso_remedy_1", "fstpso_remedy_2", "fstpso_remedy_3", "fstpso_remedy_4", "stufstpso"])
-# remedy_names = ["fstpso_remedy_1", "stufstpso"]
+"""remedy_names = (["pso_ring_remedy_1", "pso_ring_remedy_2", "pso_ring_remedy_3", "pso_ring_remedy_4"] +
+                ["fstpso_remedy_1", "fstpso_remedy_2", "fstpso_remedy_3", "fstpso_remedy_4", "stufstpso"])"""
+"""remedy_names = (["pso_ring_remedy_1a", "pso_ring_remedy_2a", "pso_ring_remedy_3a", "pso_ring_remedy_4a"] +
+                ["pso_ring_remedy_1a1", "pso_ring_remedy_2a1", "pso_ring_remedy_3a1", "pso_ring_remedy_4a1", "stufstpso"])"""
+remedy_names = ["pso_ring_dilation_1", "pso_ring_dilation_2", "pso_ring_dilation_3", "pso_ring_dilation_4",
+                "pso_ring_dilation_5", "pso_ring_dilation_6"]
 
 # ["pso_ring_remedy_1", "pso_ring_remedy_2", "pso_ring_remedy_3", "pso_ring_remedy_4"]
 
