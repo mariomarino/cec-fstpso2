@@ -1,5 +1,3 @@
-# every 10% maxiter, stalling particles' pbest +- 0.5% search sp.
-
 import math
 import logging
 import random
@@ -48,7 +46,7 @@ class Particle(object):
         return "\t".join(map(str, self.X))
 
 
-class PSO_ring_dilation_6(object):
+class PSO_ring_dilation_5(object):
 
     def __repr__(self):
         return str("<PSO instance " + self.ID + ">")
@@ -142,7 +140,7 @@ class PSO_ring_dilation_6(object):
             particleVelocity = linalg.norm(s.V)
             if s.IsStalling:
                 numStallingParticles += 1
-            if particleVelocity > currentCumAvgVelocity:
+            if particleVelocity <= currentCumAvgVelocity:
                 s.Kappa += 1
                 if s.Kappa <= self.KappaMax:
                     continue

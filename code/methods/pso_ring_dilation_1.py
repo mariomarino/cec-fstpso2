@@ -1,5 +1,3 @@
-# every 10% maxiter, stalling particles' pbest +- 0.5% search sp.
-
 import math
 import logging
 import random
@@ -48,7 +46,7 @@ class Particle(object):
         return "\t".join(map(str, self.X))
 
 
-class PSO_ring_dilation_3(object):
+class PSO_ring_dilation_1(object):
 
     def __repr__(self):
         return str("<PSO instance " + self.ID + ">")
@@ -507,6 +505,9 @@ class PSO_ring_dilation_3(object):
             center = p.X
             radius = 0.05
             alpha = 10
+
+            dist = linalg.norm(dest_init - array(center))
+            BF = df.f(alpha, dist / radius)
             dest = []
 
             for n in range(len(p.X)):
@@ -514,10 +515,8 @@ class PSO_ring_dilation_3(object):
                 c1 = p.X[n]
                 c2 = p.V[n]
                 tv = c1 + c2
-                dist = linalg.norm(array(dest_init) - array(center))
 
                 if p.IsStalling and dist < radius:
-                    BF = df.f(alpha, c2 / radius)
                     tv = BF * (c2 / dist) * radius + c1
 
                 rnd1 = rnd2 = 0

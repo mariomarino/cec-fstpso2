@@ -7,6 +7,7 @@ import math
 import pickle
 
 sys.path.insert(0, "code")
+sys.path.insert(0, "code/methods")
 
 from benchmarks.soo.limits import limits
 from benchmarks.soo.functions import functions
@@ -45,8 +46,7 @@ if __name__ == "__main__":
     budget_str = "4B"
 
     pathlib.Path(f'{dir_results_base}/{fitness}/{budget_str}').mkdir(parents=True, exist_ok=True)
-    pathlib.Path(f'{dir_results_base}/{fitness}/{budget_str}/gbest_{remedy_name}').mkdir(parents=True,
-                                                                                                   exist_ok=True)
+    pathlib.Path(f'{dir_results_base}/{fitness}/{budget_str}/gbest_{remedy_name}').mkdir(parents=True, exist_ok=True)
 
     search_space = [limits[fitness]] * args.D
     f = functions[fitness]

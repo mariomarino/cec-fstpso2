@@ -1,5 +1,3 @@
-# every 10% maxiter, stalling particles' pbest +- 0.5% search sp.
-
 import math
 import logging
 import random

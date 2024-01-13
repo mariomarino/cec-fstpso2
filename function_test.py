@@ -7,6 +7,7 @@ import math
 import pickle
 
 sys.path.insert(0, "code")
+sys.path.insert(0, "code/methods")
 
 from benchmarks.soo.limits import limits
 from benchmarks.soo.functions import functions

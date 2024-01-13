@@ -1,5 +1,3 @@
-# every 10% maxiter, stalling particles' pbest +- 0.5% search sp.
-
 import math
 import logging
 import random
@@ -48,7 +46,7 @@ class Particle(object):
         return "\t".join(map(str, self.X))
 
 
-class PSO_ring_dilation_5(object):
+class PSO_ring_dilation_2(object):
 
     def __repr__(self):
         return str("<PSO instance " + self.ID + ">")
@@ -142,7 +140,7 @@ class PSO_ring_dilation_5(object):
             particleVelocity = linalg.norm(s.V)
             if s.IsStalling:
                 numStallingParticles += 1
-            if particleVelocity <= currentCumAvgVelocity:
+            if particleVelocity > currentCumAvgVelocity:
                 s.Kappa += 1
                 if s.Kappa <= self.KappaMax:
                     continue
@@ -503,6 +501,13 @@ class PSO_ring_dilation_5(object):
                     p.MarkedForRestart = False
                     continue
 
+            dest = array(p.X) + array(p.V)
+            center = p.X
+            radius = 0.05
+            alpha = 10
+
+            dist = linalg.norm(dest - array(center))
+            BF = df.f(alpha, dist / radius)
             dest = []
 
             for n in range(len(p.X)):
@@ -511,22 +516,8 @@ class PSO_ring_dilation_5(object):
                 c2 = p.V[n]
                 tv = c1 + c2
 
-                if p.IsStalling:
-                    for dilation in self.Dilations:
-                        center = dilation['center']
-                        radius = dilation['radius']
-                        dest_init = array(p.X) + array(p.V)
-                        dist = linalg.norm(dest_init - array(center))
-
-                        if dist >= radius:
-                            continue
-                        else:
-                            alpha = dilation['alpha']
-                            BF = df.f(alpha, dist / radius)
-                            mult = BF * radius / dist
-                            # dest = array(center) + BF * radius * (array(dest)-array(center))/dist
-                            for n in range(len(p.X)):
-                                tv = center[n] + mult * (dest_init[n] - center[n])
+                if p.IsStalling and dist < radius:
+                    tv = BF * (c2 / dist) * radius + c1
 
                 rnd1 = rnd2 = 0
                 if tv > self.Boundaries[n][1]:

@@ -7,6 +7,7 @@ import math
 import pickle
 
 sys.path.insert(0, "code")
+sys.path.insert(0, "code/methods")
 
 from benchmarks.soo.limits import limits
 from benchmarks.soo.functions import functions
@@ -18,12 +19,6 @@ from pso_ring import PSO_ring
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    """parser.add_argument("--function", '-F', dest='F', type=int)
-    parser.add_argument("--dimensions", '-D', dest='D', type=int)
-    parser.add_argument("--run", '-R', dest='R', type=int)"""
-    """parser.add_argument("-F", "--fitness", required=True, type=int, dest="F")
-    parser.add_argument("-D", "--dimensions", required=True, type=int, dest="D")
-    parser.add_argument("-R", "--run", required=True, type=int, dest="R")"""
     parser.add_argument("-F", "--fitness", required=True)
     parser.add_argument("-D", "--dimensions", required=True)
     parser.add_argument("-R", "--run", required=True)
